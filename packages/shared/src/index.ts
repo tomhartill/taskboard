@@ -63,6 +63,8 @@ export const Project = z.object({
   repo: z.string().max(200).nullable(),
   claudeProjectUrl: url.nullable(),
   defaultMode: Mode,
+  /** Where an imported project came from, e.g. github:tomhartill/mvc. Null for ones made in the app. */
+  externalKey: z.string().nullable(),
   createdAt: z.string(),
 });
 export type Project = z.infer<typeof Project>;
@@ -90,6 +92,8 @@ export const Card = z.object({
   prUrl: url.nullable(),
   prState: PrState.nullable(),
   blockedReason: z.string().max(500).nullable(),
+  /** Where an imported card came from, e.g. github:tomhartill/mvc#123. Null for ones made in the app. */
+  externalKey: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   doneAt: z.string().nullable(),
@@ -106,6 +110,8 @@ export const Thread = z.object({
   url: url.nullable(),
   state: ThreadState,
   lastActivityAt: z.string(),
+  /** Where an imported thread came from, e.g. claude-thread:<id>. Null for ones made in the app. */
+  externalKey: z.string().nullable(),
   createdAt: z.string(),
 });
 export type Thread = z.infer<typeof Thread>;
@@ -205,6 +211,92 @@ export type UpdateThread = z.input<typeof UpdateThread>;
 
 export const UpdateSettings = Settings.partial();
 export type UpdateSettings = z.infer<typeof UpdateSettings>;
+
+/* ---------- Import ---------- */
+
+/**
+ * Identifies a record by where it came from, so importing the same file again
+ * updates it instead of adding a copy: github:tomhartill/mvc#123,
+ * claude-thread:<id>, manual:<slug>.
+ */
+export const ExternalKey = z
+  .string()
+  .trim()
+  .min(3)
+  .max(300)
+  .regex(/^[a-z][a-z0-9-]*:\S/, 'Expected source:id, such as github:tomhartill/mvc#12');
+
+/** A project in an import file. Fields left out keep their current value (or the default, for a new project). */
+export const ImportProject = z.object({
+  externalKey: ExternalKey,
+  name: z.string().trim().min(1).max(80),
+  colour: z.number().int().min(1).max(5).optional(),
+  repo: z.string().trim().max(200).nullable().optional(),
+  claudeProjectUrl: url.nullable().optional(),
+  defaultMode: Mode.optional(),
+});
+export type ImportProject = z.infer<typeof ImportProject>;
+
+/**
+ * A card in an import file. `column` places a new card; on a re-import it only
+ * applies when it is `done`, so the cards Tom has moved stay where he put them.
+ */
+export const ImportCard = z.object({
+  externalKey: ExternalKey,
+  title: z.string().trim().min(1).max(300),
+  brief: z.string().max(20000).optional(),
+  column: Column.optional(),
+  kind: Kind.optional(),
+  /** The externalKey of a project in this file or already on the board. */
+  project: ExternalKey.nullable().optional(),
+  priority: Priority.optional(),
+  mode: Mode.optional(),
+  source: Source.optional(),
+  sourceUrl: url.nullable().optional(),
+  plannedDay: isoDate.nullable().optional(),
+  sessionUrl: url.nullable().optional(),
+  branch: z.string().trim().max(200).nullable().optional(),
+  prUrl: url.nullable().optional(),
+  prState: PrState.nullable().optional(),
+  blockedReason: z.string().max(500).nullable().optional(),
+});
+export type ImportCard = z.infer<typeof ImportCard>;
+
+/** A Claude thread in an import file. Parents may come before or after their sub-threads. */
+export const ImportThread = z.object({
+  externalKey: ExternalKey,
+  /** The externalKey of its project, in this file or already on the board. */
+  project: ExternalKey,
+  /** The externalKey of the thread it sits under, if it is a sub-thread. Must be in the same project. */
+  parent: ExternalKey.nullable().optional(),
+  title: z.string().trim().min(1).max(300),
+  url: url.nullable().optional(),
+  state: ThreadState.optional(),
+  lastActivityAt: z.string().datetime({ offset: true }).optional(),
+});
+export type ImportThread = z.infer<typeof ImportThread>;
+
+export const ImportFile = z.object({
+  projects: z.array(ImportProject).max(500).default([]),
+  cards: z.array(ImportCard).max(5000).default([]),
+  threads: z.array(ImportThread).max(5000).default([]),
+});
+export type ImportFile = z.input<typeof ImportFile>;
+
+export const ImportCounts = z.object({
+  created: z.number().int(),
+  updated: z.number().int(),
+  unchanged: z.number().int(),
+});
+export type ImportCounts = z.infer<typeof ImportCounts>;
+
+export const ImportResult = z.object({
+  projects: ImportCounts,
+  cards: ImportCounts,
+  threads: ImportCounts,
+  dryRun: z.boolean(),
+});
+export type ImportResult = z.infer<typeof ImportResult>;
 
 /* ---------- API responses ---------- */
 

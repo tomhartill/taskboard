@@ -13,6 +13,7 @@
     "db:generate": "pnpm --filter @taskboard/server db:generate",
     "db:migrate": "pnpm --filter @taskboard/server db:migrate",
     "db:seed": "pnpm --filter @taskboard/server db:seed",
+    "board:import": "pnpm --filter @taskboard/server board:import",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"
   },

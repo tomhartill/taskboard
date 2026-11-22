@@ -34,6 +34,8 @@ export const projects = pgTable('projects', {
   repo: text('repo'),
   claudeProjectUrl: text('claude_project_url'),
   defaultMode: modeEnum('default_mode').notNull().default('wait'),
+  /** Set on imported projects so a re-import updates them; see ImportFile. */
+  externalKey: text('external_key').unique(),
   createdAt: ts('created_at').notNull().defaultNow(),
 });
 
@@ -58,6 +60,8 @@ export const cards = pgTable(
     prUrl: text('pr_url'),
     prState: prStateEnum('pr_state'),
     blockedReason: text('blocked_reason'),
+    /** Set on imported cards so a re-import updates them; see ImportFile. */
+    externalKey: text('external_key').unique(),
     createdAt: ts('created_at').notNull().defaultNow(),
     updatedAt: ts('updated_at').notNull().defaultNow(),
     doneAt: ts('done_at'),
@@ -81,6 +85,8 @@ export const threads = pgTable(
     url: text('url'),
     state: threadStateEnum('state').notNull().default('working'),
     lastActivityAt: ts('last_activity_at').notNull().defaultNow(),
+    /** Set on imported threads so a re-import updates them; see ImportFile. */
+    externalKey: text('external_key').unique(),
     createdAt: ts('created_at').notNull().defaultNow(),
   },
   (t) => [index('threads_project_idx').on(t.projectId), index('threads_parent_idx').on(t.parentId)],

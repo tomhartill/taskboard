@@ -5,7 +5,7 @@ import { applyEvent } from './apply';
 const card = (id: number, title = `Card ${id}`): Card => ({
   id, ref: `T-${id}`, title, brief: '', column: 'today', rank: id * 1000, kind: 'work', projectId: null,
   priority: 'medium', mode: 'wait', source: 'manual', sourceUrl: null, plannedDay: null, carriedFrom: null, sessionUrl: null,
-  branch: null, prUrl: null, prState: null, blockedReason: null, createdAt: '', updatedAt: '', doneAt: null,
+  branch: null, prUrl: null, prState: null, blockedReason: null, externalKey: null, createdAt: '', updatedAt: '', doneAt: null,
 });
 const board: BoardSnapshot = {
   cards: [card(1)], projects: [], threads: [], settings: { palette: 'slate', projectsLayout: 'columns' }, seq: 10,
@@ -30,7 +30,7 @@ describe('applyEvent', () => {
   });
   it('adds, replaces and removes threads', () => {
     const th = (id: number, title = `Thread ${id}`) => ({
-      id, projectId: 1, parentId: null, title, url: null, state: 'working' as const, lastActivityAt: '', createdAt: '',
+      id, projectId: 1, parentId: null, title, url: null, state: 'working' as const, lastActivityAt: '', externalKey: null, createdAt: '',
     });
     const a = applyEvent(board, { seq: 11, type: 'thread.upserted', thread: th(1) });
     const b = applyEvent(a, { seq: 12, type: 'thread.upserted', thread: th(1, 'Renamed') });

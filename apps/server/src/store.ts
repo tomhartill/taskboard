@@ -45,8 +45,8 @@ export class NotFound extends Error {
 export class Invalid extends Error {}
 
 export const toCard = (row: typeof t.cards.$inferSelect): Card => ({ ...row, ref: cardRef(row.id) });
-const toProject = (row: typeof t.projects.$inferSelect): Project => row;
-const toThread = (row: typeof t.threads.$inferSelect): Thread => row;
+export const toProject = (row: typeof t.projects.$inferSelect): Project => row;
+export const toThread = (row: typeof t.threads.$inferSelect): Thread => row;
 const toActivity = (row: typeof t.activity.$inferSelect): Activity => row;
 
 /**
@@ -82,7 +82,7 @@ export async function lastRankIn(tx: Tx | Db, column: Column): Promise<number | 
 }
 
 /** A thread's id and the ids of every sub-thread beneath it, at any depth. */
-async function subtreeIds(tx: Tx, rootId: number): Promise<number[]> {
+export async function subtreeIds(tx: Tx, rootId: number): Promise<number[]> {
   const rows = await tx.execute<{ id: number }>(sql`
     with recursive sub(id) as (
       select ${rootId}::int

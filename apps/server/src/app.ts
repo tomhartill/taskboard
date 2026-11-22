@@ -12,6 +12,7 @@ import { reconcile, scheduleReconcile } from './github/reconcile';
 import { githubWebhook } from './github/webhook';
 import { LiveHub } from './live/hub';
 import { apiRoutes } from './routes/api';
+import { importRoutes } from './routes/import';
 import { Invalid, NotFound, createStore } from './store';
 
 export async function buildApp(config: Config, opts: { logger?: boolean; reconcile?: boolean } = {}) {
@@ -48,6 +49,7 @@ export async function buildApp(config: Config, opts: { logger?: boolean; reconci
   });
 
   await app.register(apiRoutes, { prefix: '/api/v1', store });
+  await app.register(importRoutes, { prefix: '/api/v1', db });
 
   // GitHub: pull request webhooks move cards; a reconcile job catches missed deliveries.
   await app.register(githubWebhook, { db, secret: config.GITHUB_WEBHOOK_SECRET });

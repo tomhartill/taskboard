@@ -133,6 +133,7 @@ Writers take a Postgres advisory lock, so events are numbered in commit order an
 | `pnpm db:generate` | Write a new migration after changing `apps/server/src/db/schema.ts` |
 | `pnpm db:migrate` | Apply migrations (the server also does this on start) |
 | `pnpm db:seed` | Sample projects and cards on an empty board |
+| `pnpm board:import <file.json> [--dry-run]` | Import projects, cards and threads from a file; see below |
 
 ## API
 
@@ -148,12 +149,49 @@ All under `/api/v1`, JSON, signed in.
 | `GET /cards/:id/activity` | The card's activity list |
 | `POST /projects`, `PATCH /projects/:id`, `DELETE /projects/:id` | Projects |
 | `POST /threads`, `PATCH /threads/:id`, `DELETE /threads/:id` | Threads on the Projects map. `parentId` makes a sub-thread (same project as its parent). Moving a thread to another project takes its sub-threads with it; deleting one deletes its sub-threads |
+| `POST /import` | Import projects, cards and threads; `?dryRun=true` reports without saving |
 | `PATCH /settings` | `{ palette?, projectsLayout? }`, stored on the server so they follow you |
 | `GET /me` | Who is signed in |
 | `POST /github/reconcile` | Check GitHub for missed pull request changes now (needs `GITHUB_TOKEN`) |
 | `WS /live` | Live events; see above |
 
 `POST /webhooks/github` sits outside `/api/v1` and sign-in; GitHub's signature is checked instead.
+
+## Importing projects, cards and threads
+
+`pnpm board:import tasks.json` (or `POST /api/v1/import`) brings in a file like this:
+
+```json
+{
+  "projects": [{ "externalKey": "github:tomhartill/mvc", "name": "mvc", "repo": "tomhartill/mvc" }],
+  "cards": [
+    {
+      "externalKey": "github:tomhartill/mvc#45",
+      "title": "Bookings: import and export",
+      "column": "review",
+      "project": "github:tomhartill/mvc",
+      "prUrl": "https://github.com/tomhartill/mvc/pull/45",
+      "prState": "open"
+    },
+    { "externalKey": "manual:dentist", "title": "Book the dentist", "kind": "personal" }
+  ],
+  "threads": [
+    {
+      "externalKey": "claude-thread:abc",
+      "project": "github:tomhartill/mvc",
+      "title": "Media library fixes",
+      "url": "https://claude.ai/code/project/...",
+      "state": "review"
+    }
+  ]
+}
+```
+
+- Every record needs an `externalKey` saying where it came from (`github:owner/repo#12`, `claude-thread:<id>`, `manual:<slug>`). Running the same file again updates those records instead of adding copies, so it is safe to re-run.
+- A card's or thread's `project` is the project's `externalKey` (a thread's `parent` works the same way), from the same file or an earlier import. A project whose key is new but whose name already exists on the board takes over that project.
+- Fields left out are never changed. Fields in the file overwrite what is on the board, so edit the file rather than the card if you plan to re-import.
+- `column` places a new card (Today if left out). On a re-import only `done` is applied, so cards you have moved stay put but finished work closes.
+- It all applies in one transaction, so a bad file changes nothing. Use `--dry-run` to see the counts first. Open devices update live.
 
 ## Not built yet
 

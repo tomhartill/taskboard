@@ -11,7 +11,8 @@
     "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=../../.env src/db/seed.ts",
     "typecheck": "tsc -p .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "board:import": "tsx --env-file-if-exists=../../.env src/db/import-file.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.5",

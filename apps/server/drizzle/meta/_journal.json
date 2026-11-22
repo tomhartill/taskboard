@@ -22,6 +22,13 @@
       "when": 1795362467885,
       "tag": "0002_days_carried_from",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795362568271,
+      "tag": "0003_import_external_keys",
+      "breakpoints": true
     }
   ]
 }
