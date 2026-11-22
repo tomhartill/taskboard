@@ -34,6 +34,10 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // Vite only answers localhost and IP addresses unless a name is listed here.
+    // .test covers taskboard.test from /etc/hosts; .local and .ts.net cover the
+    // Mac's own name and its Tailscale name when opening it on a phone.
+    allowedHosts: ['.test', '.local', '.ts.net'],
     proxy: {
       '/api/v1/live': { target: API.replace(/^http/, 'ws'), ws: true },
       '/api': { target: API },

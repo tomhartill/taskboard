@@ -12,7 +12,7 @@ TypeScript throughout. The spec is the "Task board build spec" in the Kanban pro
 
 ## Running it on your Mac
 
-You need Node 22 or later, pnpm (`corepack enable`) and Postgres 16.
+You need Node 22 or later, pnpm and Postgres 16. On Node 22 to 24 `corepack enable` gives you pnpm; Node 25 and later no longer include corepack, so use `brew install pnpm`.
 
 1. **Postgres.** Either `docker compose up -d`, or with Homebrew:
    ```sh
@@ -28,6 +28,16 @@ You need Node 22 or later, pnpm (`corepack enable`) and Postgres 16.
    pnpm dev
    ```
    Open http://localhost:5173. The server runs migrations itself when it starts.
+
+### A local name: taskboard.test
+
+To open it at http://taskboard.test:5173 instead, point the name at your Mac once:
+
+```sh
+echo '127.0.0.1 taskboard.test' | sudo tee -a /etc/hosts
+```
+
+Then set `PUBLIC_URL=http://taskboard.test:5173` in `.env` and restart `pnpm dev`. Vite already accepts any `.test` name (`server.allowedHosts` in `apps/web/vite.config.ts`). With Google sign-in on, also add `http://taskboard.test:5173/api/v1/auth/google/callback` as a redirect URI, and use that address rather than localhost, because sign-in cookies and the live connection's origin check follow `PUBLIC_URL`.
 
 `pnpm dev` runs the Vite dev server (5173) and the API server (4000) side by side; Vite forwards `/api` and the WebSocket to the server.
 
