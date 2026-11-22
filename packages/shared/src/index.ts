@@ -38,6 +38,18 @@ export type Palette = z.infer<typeof Palette>;
 export const ProjectsLayout = z.enum(['columns', 'tree']);
 export type ProjectsLayout = z.infer<typeof ProjectsLayout>;
 
+/** Where a Claude thread (or any piece of work on the Projects map) stands. */
+export const THREAD_STATES = ['working', 'waiting', 'review', 'done'] as const;
+export const ThreadState = z.enum(THREAD_STATES);
+export type ThreadState = z.infer<typeof ThreadState>;
+
+export const THREAD_STATE_LABELS: Record<ThreadState, string> = {
+  working: 'Working',
+  waiting: 'Waiting on you',
+  review: 'Ready to review',
+  done: 'Done',
+};
+
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected a date as YYYY-MM-DD');
 const url = z.string().url().max(2000);
 
@@ -81,6 +93,20 @@ export const Card = z.object({
   doneAt: z.string().nullable(),
 });
 export type Card = z.infer<typeof Card>;
+
+/** A Claude thread (or sub-thread) under a project, shown on the Projects map. */
+export const Thread = z.object({
+  id: z.number().int(),
+  projectId: z.number().int(),
+  /** The thread this one is a sub-thread of; null for a top-level thread. */
+  parentId: z.number().int().nullable(),
+  title: z.string().min(1).max(300),
+  url: url.nullable(),
+  state: ThreadState,
+  lastActivityAt: z.string(),
+  createdAt: z.string(),
+});
+export type Thread = z.infer<typeof Thread>;
 
 export const Actor = z.enum(['you', 'claude', 'intake', 'github']);
 export type Actor = z.infer<typeof Actor>;
@@ -159,6 +185,21 @@ export type CreateProject = z.input<typeof CreateProject>;
 export const UpdateProject = CreateProject.partial();
 export type UpdateProject = z.input<typeof UpdateProject>;
 
+export const CreateThread = z.object({
+  projectId: z.number().int(),
+  parentId: z.number().int().nullable().default(null),
+  title: z.string().trim().min(1).max(300),
+  url: url.nullable().default(null),
+  state: ThreadState.default('working'),
+  /** Leave out for now. Importers pass the real time of the thread's last activity. */
+  lastActivityAt: z.string().datetime({ offset: true }).optional(),
+});
+export type CreateThread = z.input<typeof CreateThread>;
+
+/** Changing projectId moves the thread and its sub-threads; a parent in another project is let go. */
+export const UpdateThread = CreateThread.partial();
+export type UpdateThread = z.input<typeof UpdateThread>;
+
 export const UpdateSettings = Settings.partial();
 export type UpdateSettings = z.infer<typeof UpdateSettings>;
 
@@ -167,6 +208,7 @@ export type UpdateSettings = z.infer<typeof UpdateSettings>;
 export const BoardSnapshot = z.object({
   cards: z.array(Card),
   projects: z.array(Project),
+  threads: z.array(Thread),
   settings: Settings,
   /** Sequence number of the newest event included in this snapshot. */
   seq: z.number().int(),
@@ -184,6 +226,8 @@ export const BoardEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('activity.added'), activity: Activity }),
   z.object({ type: z.literal('project.upserted'), project: Project }),
   z.object({ type: z.literal('project.deleted'), id: z.number().int() }),
+  z.object({ type: z.literal('thread.upserted'), thread: Thread }),
+  z.object({ type: z.literal('thread.deleted'), id: z.number().int() }),
   z.object({ type: z.literal('settings.updated'), settings: Settings }),
 ]);
 export type BoardEvent = z.infer<typeof BoardEvent>;

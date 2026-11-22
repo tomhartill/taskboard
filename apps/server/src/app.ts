@@ -9,7 +9,7 @@ import type { Config } from './config';
 import { createDb } from './db/client';
 import { LiveHub } from './live/hub';
 import { apiRoutes } from './routes/api';
-import { NotFound, createStore } from './store';
+import { Invalid, NotFound, createStore } from './store';
 
 export async function buildApp(config: Config, opts: { logger?: boolean } = {}) {
   const app = Fastify({
@@ -25,6 +25,7 @@ export async function buildApp(config: Config, opts: { logger?: boolean } = {}) 
       return reply.code(400).send({ error: 'Invalid request', issues: err.issues });
     }
     if (err instanceof NotFound) return reply.code(404).send({ error: err.message });
+    if (err instanceof Invalid) return reply.code(400).send({ error: err.message });
     // Drizzle wraps driver errors; the Postgres code sits on the cause.
     const pgCode = (err as { code?: string }).code ?? (err.cause as { code?: string } | undefined)?.code;
     if (pgCode === '23505') {

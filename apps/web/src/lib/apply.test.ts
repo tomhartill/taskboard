@@ -8,7 +8,7 @@ const card = (id: number, title = `Card ${id}`): Card => ({
   branch: null, prUrl: null, prState: null, blockedReason: null, createdAt: '', updatedAt: '', doneAt: null,
 });
 const board: BoardSnapshot = {
-  cards: [card(1)], projects: [], settings: { palette: 'slate', projectsLayout: 'columns' }, seq: 10,
+  cards: [card(1)], projects: [], threads: [], settings: { palette: 'slate', projectsLayout: 'columns' }, seq: 10,
 };
 
 describe('applyEvent', () => {
@@ -27,5 +27,15 @@ describe('applyEvent', () => {
     expect(a.cards).toEqual([]);
     const b = applyEvent(a, { seq: 12, type: 'settings.updated', settings: { palette: 'ink', projectsLayout: 'tree' } });
     expect(b.settings.palette).toBe('ink');
+  });
+  it('adds, replaces and removes threads', () => {
+    const th = (id: number, title = `Thread ${id}`) => ({
+      id, projectId: 1, parentId: null, title, url: null, state: 'working' as const, lastActivityAt: '', createdAt: '',
+    });
+    const a = applyEvent(board, { seq: 11, type: 'thread.upserted', thread: th(1) });
+    const b = applyEvent(a, { seq: 12, type: 'thread.upserted', thread: th(1, 'Renamed') });
+    expect(b.threads.map((t) => t.title)).toEqual(['Renamed']);
+    expect(applyEvent(b, { seq: 13, type: 'thread.deleted', id: 1 }).threads).toEqual([]);
+    expect(applyEvent(b, { seq: 13, type: 'project.deleted', id: 1 }).threads).toEqual([]);
   });
 });

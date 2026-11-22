@@ -26,6 +26,17 @@ if (cards.length) {
   await store.createCard({ title: 'Tidy the README install steps', column: 'review', projectId: kinzo.id });
   await store.createCard({ title: 'Client wants a different booking email wording', column: 'blocked', projectId: mvc.id });
   await store.createCard({ title: 'Pay the electricity bill', column: 'done', kind: 'personal' });
-  console.log('Sample projects and cards added.');
+
+  const ago = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
+  const csv = await store.createThread({ projectId: mvc.id, title: 'Add CSV export', state: 'review', lastActivityAt: ago(6) });
+  await store.createThread({ projectId: mvc.id, parentId: csv.id, title: 'Handle large exports', lastActivityAt: ago(2) });
+  await store.createThread({ projectId: mvc.id, parentId: csv.id, title: 'Write export tests', state: 'done', lastActivityAt: ago(5) });
+  await store.createThread({ projectId: mvc.id, title: 'Upgrade to Node 22', state: 'waiting', lastActivityAt: ago(26) });
+  const launch = await store.createThread({ projectId: kinzo.id, title: 'Plan spring launch', lastActivityAt: ago(1) });
+  await store.createThread({ projectId: kinzo.id, parentId: launch.id, title: 'Draft launch email', state: 'review', lastActivityAt: ago(2) });
+  await store.createThread({ projectId: kinzo.id, parentId: launch.id, title: 'Book photographer', state: 'waiting', lastActivityAt: ago(24) });
+  await store.createThread({ projectId: prospector.id, title: 'Score inbound leads', lastActivityAt: ago(0.3) });
+  await store.createThread({ projectId: prospector.id, title: 'Weekly pipeline report', state: 'review', lastActivityAt: ago(8) });
+  console.log('Sample projects, cards and threads added.');
 }
 await pool.end();

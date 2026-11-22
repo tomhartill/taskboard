@@ -81,13 +81,14 @@ All under `/api/v1`, JSON, signed in.
 
 | Method and path | What it does |
 | --- | --- |
-| `GET /board` | Cards, projects, settings and the current `seq` |
+| `GET /board` | Cards, projects, threads, settings and the current `seq` |
 | `POST /cards` | Add a card |
 | `PATCH /cards/:id` | Edit fields |
 | `POST /cards/:id/move` | `{ column, aboveId?, belowId? }` |
 | `DELETE /cards/:id` | Delete (Dismiss in Triage) |
 | `GET /cards/:id/activity` | The card's activity list |
 | `POST /projects`, `PATCH /projects/:id`, `DELETE /projects/:id` | Projects |
+| `POST /threads`, `PATCH /threads/:id`, `DELETE /threads/:id` | Threads on the Projects map. `parentId` makes a sub-thread (same project as its parent). Moving a thread to another project takes its sub-threads with it; deleting one deletes its sub-threads |
 | `PATCH /settings` | `{ palette?, projectsLayout? }`, stored on the server so they follow you |
 | `GET /me` | Who is signed in |
 | `WS /live` | Live events; see above |

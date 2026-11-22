@@ -21,6 +21,15 @@ export function applyEvent(board: BoardSnapshot, event: SequencedEvent): BoardSn
     }
     case 'project.deleted':
       next.projects = board.projects.filter((p) => p.id !== event.id);
+      next.threads = board.threads.filter((t) => t.projectId !== event.id);
+      break;
+    case 'thread.upserted': {
+      const i = board.threads.findIndex((t) => t.id === event.thread.id);
+      next.threads = i === -1 ? [...board.threads, event.thread] : board.threads.with(i, event.thread);
+      break;
+    }
+    case 'thread.deleted':
+      next.threads = board.threads.filter((t) => t.id !== event.id);
       break;
     case 'settings.updated':
       next.settings = event.settings;

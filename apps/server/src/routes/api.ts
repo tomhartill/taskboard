@@ -1,6 +1,15 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { CreateCard, CreateProject, MoveCard, UpdateCard, UpdateProject, UpdateSettings } from '@taskboard/shared';
+import {
+  CreateCard,
+  CreateProject,
+  CreateThread,
+  MoveCard,
+  UpdateCard,
+  UpdateProject,
+  UpdateSettings,
+  UpdateThread,
+} from '@taskboard/shared';
 import type { Store } from '../store';
 
 const IdParams = z.object({ id: z.coerce.number().int().positive() });
@@ -34,6 +43,16 @@ export async function apiRoutes(app: FastifyInstance, { store }: { store: Store 
   );
   app.delete('/projects/:id', async (req, reply) => {
     await store.deleteProject(IdParams.parse(req.params).id);
+    return reply.code(204).send();
+  });
+
+  app.post('/threads', async (req, reply) => {
+    reply.code(201);
+    return store.createThread(CreateThread.parse(req.body));
+  });
+  app.patch('/threads/:id', (req) => store.updateThread(IdParams.parse(req.params).id, UpdateThread.parse(req.body)));
+  app.delete('/threads/:id', async (req, reply) => {
+    await store.deleteThread(IdParams.parse(req.params).id);
     return reply.code(204).send();
   });
 

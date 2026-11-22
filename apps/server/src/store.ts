@@ -14,6 +14,9 @@ import {
   type Project,
   type SequencedEvent,
   Settings,
+  type Thread,
+  CreateThread,
+  UpdateThread,
   UpdateCard,
   UpdateProject,
   UpdateSettings,
@@ -37,8 +40,12 @@ export class NotFound extends Error {
   }
 }
 
+/** A request that is well formed but can't be carried out, such as making a thread its own parent. */
+export class Invalid extends Error {}
+
 const toCard = (row: typeof t.cards.$inferSelect): Card => ({ ...row, ref: cardRef(row.id) });
 const toProject = (row: typeof t.projects.$inferSelect): Project => row;
+const toThread = (row: typeof t.threads.$inferSelect): Thread => row;
 const toActivity = (row: typeof t.activity.$inferSelect): Activity => row;
 
 /**
@@ -73,6 +80,18 @@ async function lastRankIn(tx: Tx | Db, column: Column): Promise<number | null> {
   return row?.r ?? null;
 }
 
+/** A thread's id and the ids of every sub-thread beneath it, at any depth. */
+async function subtreeIds(tx: Tx, rootId: number): Promise<number[]> {
+  const rows = await tx.execute<{ id: number }>(sql`
+    with recursive sub(id) as (
+      select ${rootId}::int
+      union all
+      select th.id from threads th join sub on th.parent_id = sub.id
+    )
+    select id from sub`);
+  return rows.rows.map((r) => Number(r.id));
+}
+
 async function readSettings(tx: Tx | Db): Promise<Settings> {
   const rows = await tx.select().from(t.settings);
   const raw = Object.fromEntries(rows.map((r) => [r.key, r.value]));
@@ -85,15 +104,17 @@ export function createStore(db: Db) {
     async snapshot(): Promise<BoardSnapshot> {
       return db.transaction(
         async (tx) => {
-          const [cards, projects, settings, [seqRow]] = await Promise.all([
+          const [cards, projects, threads, settings, [seqRow]] = await Promise.all([
             tx.select().from(t.cards).orderBy(asc(t.cards.column), asc(t.cards.rank)),
             tx.select().from(t.projects).orderBy(asc(t.projects.name)),
+            tx.select().from(t.threads).orderBy(asc(t.threads.id)),
             readSettings(tx),
             tx.select({ seq: max(t.events.seq) }).from(t.events),
           ]);
           return {
             cards: cards.map(toCard),
             projects: projects.map(toProject),
+            threads: threads.map(toThread),
             settings,
             seq: seqRow?.seq ?? 0,
           };
@@ -241,10 +262,92 @@ export function createStore(db: Db) {
           .set({ projectId: null, updatedAt: sql`now()` })
           .where(eq(t.cards.projectId, id))
           .returning();
+        const gone = await tx.select({ id: t.threads.id }).from(t.threads).where(eq(t.threads.projectId, id));
         const rows = await tx.delete(t.projects).where(eq(t.projects.id, id)).returning({ id: t.projects.id });
         if (!rows.length) throw new NotFound('Project');
         for (const row of affected) emit({ type: 'card.upserted', card: toCard(row) });
+        for (const th of gone) emit({ type: 'thread.deleted', id: th.id });
         emit({ type: 'project.deleted', id });
+      });
+    },
+
+    async createThread(input: CreateThread): Promise<Thread> {
+      const data = CreateThread.parse(input);
+      return write(db, async (tx, emit) => {
+        const [project] = await tx.select({ id: t.projects.id }).from(t.projects).where(eq(t.projects.id, data.projectId));
+        if (!project) throw new NotFound('Project');
+        if (data.parentId !== null) {
+          const [parent] = await tx.select().from(t.threads).where(eq(t.threads.id, data.parentId));
+          if (!parent) throw new NotFound('Parent thread');
+          if (parent.projectId !== data.projectId) throw new Invalid('A sub-thread must be in the same project as its parent');
+        }
+        const { lastActivityAt, ...rest } = data;
+        const [row] = await tx
+          .insert(t.threads)
+          .values({ ...rest, ...(lastActivityAt ? { lastActivityAt } : {}) })
+          .returning();
+        const thread = toThread(row!);
+        emit({ type: 'thread.upserted', thread });
+        return thread;
+      });
+    },
+
+    async updateThread(id: number, input: UpdateThread): Promise<Thread> {
+      const patch = UpdateThread.parse(input);
+      return write(db, async (tx, emit) => {
+        const [current] = await tx.select().from(t.threads).where(eq(t.threads.id, id)).for('update');
+        if (!current) throw new NotFound('Thread');
+
+        let projectId = patch.projectId ?? current.projectId;
+        let parentId = patch.parentId === undefined ? current.parentId : patch.parentId;
+
+        if (patch.projectId !== undefined && patch.projectId !== current.projectId) {
+          const [p] = await tx.select({ id: t.projects.id }).from(t.projects).where(eq(t.projects.id, patch.projectId));
+          if (!p) throw new NotFound('Project');
+        }
+        if (parentId !== null) {
+          const [parent] = await tx.select().from(t.threads).where(eq(t.threads.id, parentId));
+          if (!parent) throw new NotFound('Parent thread');
+          if ((await subtreeIds(tx, id)).includes(parentId)) {
+            throw new Invalid("A thread can't sit under itself or one of its own sub-threads");
+          }
+          if (patch.parentId !== undefined && patch.parentId !== null) {
+            if (patch.projectId !== undefined && patch.projectId !== parent.projectId) {
+              throw new Invalid('A sub-thread must be in the same project as its parent');
+            }
+            projectId = parent.projectId;
+          } else if (parent.projectId !== projectId) {
+            // Moved to another project without naming a new parent: it becomes a top-level thread there.
+            parentId = null;
+          }
+        }
+
+        const { lastActivityAt, ...rest } = patch;
+        const [row] = await tx
+          .update(t.threads)
+          .set({ ...rest, projectId, parentId, lastActivityAt: lastActivityAt ?? sql`now()` })
+          .where(eq(t.threads.id, id))
+          .returning();
+        emit({ type: 'thread.upserted', thread: toThread(row!) });
+
+        if (projectId !== current.projectId) {
+          const below = (await subtreeIds(tx, id)).filter((x) => x !== id);
+          if (below.length) {
+            const moved = await tx.update(t.threads).set({ projectId }).where(inArray(t.threads.id, below)).returning();
+            for (const m of moved) emit({ type: 'thread.upserted', thread: toThread(m) });
+          }
+        }
+        return toThread(row!);
+      });
+    },
+
+    /** Deletes the thread and every sub-thread beneath it. */
+    async deleteThread(id: number): Promise<void> {
+      await write(db, async (tx, emit) => {
+        const ids = await subtreeIds(tx, id);
+        const rows = await tx.delete(t.threads).where(eq(t.threads.id, id)).returning({ id: t.threads.id });
+        if (!rows.length) throw new NotFound('Thread');
+        for (const gone of ids.reverse()) emit({ type: 'thread.deleted', id: gone });
       });
     },
 

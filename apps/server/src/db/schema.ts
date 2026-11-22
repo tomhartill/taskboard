@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   bigserial,
   date,
   doublePrecision,
@@ -13,7 +14,7 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { COLUMNS } from '@taskboard/shared';
+import { COLUMNS, THREAD_STATES } from '@taskboard/shared';
 
 export const columnEnum = pgEnum('card_column', COLUMNS);
 export const kindEnum = pgEnum('card_kind', ['work', 'personal']);
@@ -22,6 +23,7 @@ export const modeEnum = pgEnum('card_mode', ['auto', 'wait']);
 export const sourceEnum = pgEnum('card_source', ['manual', 'email', 'enquiry']);
 export const prStateEnum = pgEnum('pr_state', ['open', 'merged', 'closed']);
 export const actorEnum = pgEnum('actor', ['you', 'claude', 'intake', 'github']);
+export const threadStateEnum = pgEnum('thread_state', THREAD_STATES);
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'string' });
 
@@ -63,6 +65,24 @@ export const cards = pgTable(
     index('cards_column_rank_idx').on(t.column, t.rank),
     index('cards_planned_day_idx').on(t.plannedDay),
   ],
+);
+
+/** Claude threads and sub-threads under each project, for the Projects map. */
+export const threads = pgTable(
+  'threads',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    parentId: integer('parent_id').references((): AnyPgColumn => threads.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    url: text('url'),
+    state: threadStateEnum('state').notNull().default('working'),
+    lastActivityAt: ts('last_activity_at').notNull().defaultNow(),
+    createdAt: ts('created_at').notNull().defaultNow(),
+  },
+  (t) => [index('threads_project_idx').on(t.projectId), index('threads_parent_idx').on(t.parentId)],
 );
 
 export const activity = pgTable(
