@@ -7,6 +7,7 @@ import { ZodError } from 'zod';
 import { registerAuth } from './auth/auth';
 import type { Config } from './config';
 import { createDb } from './db/client';
+import { startRollover } from './jobs/rollover';
 import { LiveHub } from './live/hub';
 import { apiRoutes } from './routes/api';
 import { Invalid, NotFound, createStore } from './store';
@@ -68,8 +69,13 @@ export async function buildApp(config: Config, opts: { logger?: boolean } = {}) 
     });
   }
 
-  app.addHook('onReady', () => hub.start());
+  let rollover: ReturnType<typeof startRollover> | undefined;
+  app.addHook('onReady', async () => {
+    await hub.start();
+    rollover = startRollover(store, config.TIMEZONE, app.log);
+  });
   app.addHook('onClose', async () => {
+    await rollover?.stop();
     await hub.stop();
     await pool.end();
   });

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, max, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNotNull, lt, max, notInArray, sql } from 'drizzle-orm';
 import {
   type Activity,
   type Actor,
@@ -22,6 +22,7 @@ import {
   UpdateSettings,
   cardRef,
   rankBetween,
+  shortDay,
 } from '@taskboard/shared';
 import type { Db } from './db/client';
 import * as t from './db/schema';
@@ -162,14 +163,23 @@ export function createStore(db: Db) {
     async updateCard(id: number, input: UpdateCard, actor: Actor = 'you'): Promise<Card> {
       const patch = UpdateCard.parse(input);
       return write(db, async (tx, emit) => {
+        const replanned = patch.plannedDay !== undefined;
+        const [before] = replanned
+          ? await tx.select({ plannedDay: t.cards.plannedDay }).from(t.cards).where(eq(t.cards.id, id)).for('update')
+          : [];
         const [row] = await tx
           .update(t.cards)
-          .set({ ...patch, updatedAt: sql`now()` })
+          // Giving a card a day by hand means it is no longer carried over.
+          .set({ ...patch, ...(replanned ? { carriedFrom: null } : {}), updatedAt: sql`now()` })
           .where(eq(t.cards.id, id))
           .returning();
         if (!row) throw new NotFound('Card');
         const card = toCard(row);
         emit({ type: 'card.upserted', card });
+        if (replanned && before && before.plannedDay !== patch.plannedDay) {
+          const text = patch.plannedDay ? `Planned for ${shortDay(patch.plannedDay)}` : 'Unscheduled';
+          await addActivity(tx, emit, id, actor, text);
+        }
         if (patch.mode) {
           await addActivity(tx, emit, id, actor, `Set to ${patch.mode === 'auto' ? 'Auto-start' : 'Wait for me'}`);
         }
@@ -364,6 +374,43 @@ export function createStore(db: Db) {
         const settings = await readSettings(tx);
         emit({ type: 'settings.updated', settings });
         return settings;
+      });
+    },
+
+    /**
+     * Move unfinished cards planned for a day before `today` onto today, remembering the day
+     * they were first planned for. Safe to run any number of times. Returns the cards moved.
+     */
+    async rollOver(today: string): Promise<Card[]> {
+      return write(db, async (tx, emit) => {
+        const stale = await tx
+          .select({ id: t.cards.id, plannedDay: t.cards.plannedDay })
+          .from(t.cards)
+          .where(
+            and(
+              isNotNull(t.cards.plannedDay),
+              lt(t.cards.plannedDay, today),
+              notInArray(t.cards.column, ['done', 'triage']),
+            ),
+          )
+          .for('update');
+        if (!stale.length) return [];
+        const rows = await tx
+          .update(t.cards)
+          .set({
+            carriedFrom: sql`coalesce(${t.cards.carriedFrom}, ${t.cards.plannedDay})`,
+            plannedDay: today,
+            updatedAt: sql`now()`,
+          })
+          .where(inArray(t.cards.id, stale.map((c) => c.id)))
+          .returning();
+        const moved = rows.map(toCard).sort((a, b) => a.id - b.id);
+        for (const card of moved) {
+          emit({ type: 'card.upserted', card });
+          const from = stale.find((c) => c.id === card.id)!.plannedDay!;
+          await addActivity(tx, emit, card.id, 'system', `Carried over from ${shortDay(from)}`);
+        }
+        return moved;
       });
     },
 

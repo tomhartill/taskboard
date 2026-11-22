@@ -14,6 +14,18 @@ const Env = z
     /** Folder holding the built web app. Served by the server in production. */
     WEB_DIST: z.string().optional(),
     LOG_LEVEL: z.string().default('info'),
+    /** Whose midnight counts: unfinished cards roll onto the new day at midnight here. */
+    TIMEZONE: z
+      .string()
+      .default('Europe/London')
+      .refine((tz) => {
+        try {
+          new Intl.DateTimeFormat('en-GB', { timeZone: tz });
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'TIMEZONE must be an IANA time zone such as Europe/London'),
   })
   .superRefine((env, ctx) => {
     if (env.AUTH_MODE === 'google') {

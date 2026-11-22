@@ -15,6 +15,13 @@
       "when": 1795362343188,
       "tag": "0001_threads",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795362467885,
+      "tag": "0002_days_carried_from",
+      "breakpoints": true
     }
   ]
 }

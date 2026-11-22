@@ -228,7 +228,7 @@ function CardDetail({ card, board }: { card: Card; board: BoardSnapshot }) {
   );
 }
 
-const ACTORS: Record<Actor, string> = { you: 'You', claude: 'Claude', intake: 'Intake', github: 'GitHub' };
+const ACTORS: Record<Actor, string> = { you: 'You', claude: 'Claude', intake: 'Intake', github: 'GitHub', system: 'Board' };
 const timeFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 function ActivityList({ cardId }: { cardId: number }) {

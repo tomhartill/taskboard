@@ -22,7 +22,7 @@ export const priorityEnum = pgEnum('card_priority', ['high', 'medium', 'low']);
 export const modeEnum = pgEnum('card_mode', ['auto', 'wait']);
 export const sourceEnum = pgEnum('card_source', ['manual', 'email', 'enquiry']);
 export const prStateEnum = pgEnum('pr_state', ['open', 'merged', 'closed']);
-export const actorEnum = pgEnum('actor', ['you', 'claude', 'intake', 'github']);
+export const actorEnum = pgEnum('actor', ['you', 'claude', 'intake', 'github', 'system']);
 export const threadStateEnum = pgEnum('thread_state', THREAD_STATES);
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'string' });
@@ -52,6 +52,7 @@ export const cards = pgTable(
     source: sourceEnum('source').notNull().default('manual'),
     sourceUrl: text('source_url'),
     plannedDay: date('planned_day', { mode: 'string' }),
+    carriedFrom: date('carried_from', { mode: 'string' }),
     sessionUrl: text('session_url'),
     branch: text('branch'),
     prUrl: text('pr_url'),

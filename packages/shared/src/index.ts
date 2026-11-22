@@ -83,6 +83,8 @@ export const Card = z.object({
   source: Source,
   sourceUrl: url.nullable(),
   plannedDay: isoDate.nullable(),
+  /** The day this card was first planned for, when it rolled forward unfinished. Cleared when re-planned. */
+  carriedFrom: isoDate.nullable(),
   sessionUrl: url.nullable(),
   branch: z.string().max(200).nullable(),
   prUrl: url.nullable(),
@@ -108,7 +110,8 @@ export const Thread = z.object({
 });
 export type Thread = z.infer<typeof Thread>;
 
-export const Actor = z.enum(['you', 'claude', 'intake', 'github']);
+/** system = the board itself, e.g. the nightly roll-over of unfinished cards. */
+export const Actor = z.enum(['you', 'claude', 'intake', 'github', 'system']);
 export type Actor = z.infer<typeof Actor>;
 
 export const Activity = z.object({
@@ -280,4 +283,69 @@ export function branchName(id: number, title: string): string {
 export function cardIdFromBranch(branch: string): number | null {
   const m = /(?:^|[/_-])T-(\d+)(?=$|[-/_])/i.exec(branch);
   return m ? Number(m[1]) : null;
+}
+
+/* ---------- Days ---------- */
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+const LONG_DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+] as const;
+
+/** Dates are plain YYYY-MM-DD strings; the arithmetic runs at UTC noon so clocks changing can't shift a day. */
+const parseDay = (day: string) => new Date(`${day}T12:00:00Z`);
+const formatIso = (d: Date) => d.toISOString().slice(0, 10);
+
+/** Today's date (YYYY-MM-DD) in a time zone such as Europe/London. */
+export function dateIn(timeZone: string, at: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at);
+}
+
+export function addDays(day: string, n: number): string {
+  const d = parseDay(day);
+  d.setUTCDate(d.getUTCDate() + n);
+  return formatIso(d);
+}
+
+/** The Monday on or before a date. */
+export function weekStart(day: string): string {
+  const dow = parseDay(day).getUTCDay();
+  return addDays(day, -((dow + 6) % 7));
+}
+
+/** 0 = Sunday … 6 = Saturday. */
+export const dayOfWeek = (day: string) => parseDay(day).getUTCDay();
+
+/** "Mon 16 Nov" */
+export function shortDay(day: string): string {
+  const d = parseDay(day);
+  return `${DAY_NAMES[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]!.slice(0, 3)}`;
+}
+
+/** "Monday 16 November" */
+export function longDay(day: string): string {
+  const d = parseDay(day);
+  return `${LONG_DAY_NAMES[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+}
+
+/** "Mon 16" */
+export function dayHeading(day: string): string {
+  const d = parseDay(day);
+  return `${DAY_NAMES[d.getUTCDay()]} ${d.getUTCDate()}`;
+}
+
+export const dayName = (day: string) => LONG_DAY_NAMES[parseDay(day).getUTCDay()]!;
+
+/** "16 – 22 November", "30 November – 6 December", "29 December 2025 – 4 January 2026" */
+export function weekLabel(monday: string): string {
+  const a = parseDay(monday);
+  const b = parseDay(addDays(monday, 6));
+  const month = (d: Date) => MONTHS[d.getUTCMonth()];
+  if (a.getUTCFullYear() !== b.getUTCFullYear()) {
+    return `${a.getUTCDate()} ${month(a)} ${a.getUTCFullYear()} – ${b.getUTCDate()} ${month(b)} ${b.getUTCFullYear()}`;
+  }
+  if (a.getUTCMonth() !== b.getUTCMonth()) return `${a.getUTCDate()} ${month(a)} – ${b.getUTCDate()} ${month(b)}`;
+  return `${a.getUTCDate()} – ${b.getUTCDate()} ${month(b)}`;
 }

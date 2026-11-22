@@ -4,7 +4,7 @@ import { applyEvent } from './apply';
 
 const card = (id: number, title = `Card ${id}`): Card => ({
   id, ref: `T-${id}`, title, brief: '', column: 'today', rank: id * 1000, kind: 'work', projectId: null,
-  priority: 'medium', mode: 'wait', source: 'manual', sourceUrl: null, plannedDay: null, sessionUrl: null,
+  priority: 'medium', mode: 'wait', source: 'manual', sourceUrl: null, plannedDay: null, carriedFrom: null, sessionUrl: null,
   branch: null, prUrl: null, prState: null, blockedReason: null, createdAt: '', updatedAt: '', doneAt: null,
 });
 const board: BoardSnapshot = {

@@ -76,7 +76,8 @@ export function useMoveCard() {
 export function useUpdateCard() {
   return useOptimisticCard<{ id: number; patch: UpdateCard }>(
     ({ id, patch }) => api.updateCard(id, patch),
-    (card, { patch }) => ({ ...card, ...patch }),
+    // A new day by hand clears the carried-over mark, as the server does.
+    (card, { patch }) => ({ ...card, ...patch, ...(patch.plannedDay !== undefined ? { carriedFrom: null } : {}) }),
     (v) => v.id,
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { branchName, cardIdFromBranch, CreateCard, rankBetween } from './index';
+import { addDays, branchName, cardIdFromBranch, CreateCard, dateIn, longDay, rankBetween, shortDay, weekLabel, weekStart } from './index';
 
 describe('rankBetween', () => {
   it('places between, before and after neighbours', () => {
@@ -31,5 +31,31 @@ describe('CreateCard', () => {
   });
   it('rejects an empty title', () => {
     expect(CreateCard.safeParse({ title: '  ' }).success).toBe(false);
+  });
+});
+
+describe('day helpers', () => {
+  it('finds the Monday of a week', () => {
+    expect(weekStart('2026-11-22')).toBe('2026-11-16'); // Sunday
+    expect(weekStart('2026-11-16')).toBe('2026-11-16'); // Monday
+    expect(weekStart('2026-11-18')).toBe('2026-11-16');
+  });
+  it('adds days across months, years and clock changes', () => {
+    expect(addDays('2026-11-30', 1)).toBe('2026-12-01');
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2026-03-29', 1)).toBe('2026-03-30');
+    expect(addDays('2026-10-25', -1)).toBe('2026-10-24');
+  });
+  it('labels weeks and days in British style', () => {
+    expect(weekLabel('2026-11-16')).toBe('16 – 22 November');
+    expect(weekLabel('2026-11-30')).toBe('30 November – 6 December');
+    expect(weekLabel('2025-12-29')).toBe('29 December 2025 – 4 January 2026');
+    expect(shortDay('2026-11-17')).toBe('Tue 17 Nov');
+    expect(longDay('2026-11-17')).toBe('Tuesday 17 November');
+  });
+  it("reads today's date in a time zone", () => {
+    const lateUtc = new Date('2026-07-01T23:30:00Z');
+    expect(dateIn('UTC', lateUtc)).toBe('2026-07-01');
+    expect(dateIn('Europe/London', lateUtc)).toBe('2026-07-02');
   });
 });
