@@ -3,10 +3,10 @@ import type { Project, Thread } from '@taskboard/shared';
 import { ago, projectTree, subtree } from './projects';
 
 const project = (id: number, name: string): Project => ({
-  id, name, colour: 1, repo: null, claudeProjectUrl: null, defaultMode: 'wait', createdAt: '',
+  id, name, colour: 1, repo: null, claudeProjectUrl: null, defaultMode: 'wait', externalKey: null, createdAt: '',
 });
 const thread = (id: number, projectId: number, parentId: number | null, state: Thread['state'] = 'working', at = '2026-01-01T00:00:00Z'): Thread => ({
-  id, projectId, parentId, title: `T${id}`, url: null, state, lastActivityAt: at, createdAt: '',
+  id, projectId, parentId, title: `T${id}`, url: null, state, lastActivityAt: at, externalKey: null, createdAt: '',
 });
 
 describe('projectTree', () => {
