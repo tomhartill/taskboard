@@ -33,7 +33,7 @@ export const EVENTS_CHANNEL = 'board_events';
 /** Advisory lock key that serialises writers, so seq order matches commit order. */
 const WRITE_LOCK = 7_210_001;
 
-type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
+export type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
 export class NotFound extends Error {
   constructor(what: string) {
@@ -44,7 +44,7 @@ export class NotFound extends Error {
 /** A request that is well formed but can't be carried out, such as making a thread its own parent. */
 export class Invalid extends Error {}
 
-const toCard = (row: typeof t.cards.$inferSelect): Card => ({ ...row, ref: cardRef(row.id) });
+export const toCard = (row: typeof t.cards.$inferSelect): Card => ({ ...row, ref: cardRef(row.id) });
 const toProject = (row: typeof t.projects.$inferSelect): Project => row;
 const toThread = (row: typeof t.threads.$inferSelect): Thread => row;
 const toActivity = (row: typeof t.activity.$inferSelect): Activity => row;
@@ -54,7 +54,7 @@ const toActivity = (row: typeof t.activity.$inferSelect): Activity => row;
  * transaction, then NOTIFYs. Postgres only delivers the notification on commit, so
  * a client never hears about a change that was rolled back.
  */
-async function write<T>(db: Db, fn: (tx: Tx, emit: (e: BoardEvent) => void) => Promise<T>): Promise<T> {
+export async function write<T>(db: Db, fn: (tx: Tx, emit: (e: BoardEvent) => void) => Promise<T>): Promise<T> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(${WRITE_LOCK})`);
     const pending: BoardEvent[] = [];
@@ -71,12 +71,12 @@ async function write<T>(db: Db, fn: (tx: Tx, emit: (e: BoardEvent) => void) => P
   });
 }
 
-async function addActivity(tx: Tx, emit: (e: BoardEvent) => void, cardId: number, actor: Actor, text: string) {
+export async function addActivity(tx: Tx, emit: (e: BoardEvent) => void, cardId: number, actor: Actor, text: string) {
   const [row] = await tx.insert(t.activity).values({ cardId, actor, text }).returning();
   emit({ type: 'activity.added', activity: toActivity(row!) });
 }
 
-async function lastRankIn(tx: Tx | Db, column: Column): Promise<number | null> {
+export async function lastRankIn(tx: Tx | Db, column: Column): Promise<number | null> {
   const [row] = await tx.select({ r: max(t.cards.rank) }).from(t.cards).where(eq(t.cards.column, column));
   return row?.r ?? null;
 }

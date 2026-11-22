@@ -26,6 +26,12 @@ const Env = z
           return false;
         }
       }, 'TIMEZONE must be an IANA time zone such as Europe/London'),
+    /** Shared secret for POST /webhooks/github. Without it the webhook answers 503. */
+    GITHUB_WEBHOOK_SECRET: z.string().default(''),
+    /** Fine-grained token with read access to pull requests. Turns on the reconcile job. */
+    GITHUB_TOKEN: z.string().default(''),
+    GITHUB_API_URL: z.string().url().default('https://api.github.com'),
+    GITHUB_RECONCILE_MINUTES: z.coerce.number().positive().default(15),
   })
   .superRefine((env, ctx) => {
     if (env.AUTH_MODE === 'google') {

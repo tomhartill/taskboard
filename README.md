@@ -54,6 +54,65 @@ With `AUTH_MODE=dev` anyone who can reach those ports can use the board. That is
 
 Only `ALLOWED_EMAIL` can sign in. Each browser gets its own session, stored in the `sessions` table, which lasts 90 days.
 
+## GitHub pull requests move cards
+
+When a pull request comes from a branch that names a card, such as `T-12-export-enquiries-to-csv` or `claude/T-12`, GitHub tells the board and the card moves by itself:
+
+| On GitHub | On the board |
+| --- | --- |
+| PR opened, reopened or marked ready for review | Linked to the card and moved to **Review** |
+| Draft PR opened | Linked, but stays where it is until it's ready for review |
+| PR merged | **Done** |
+| PR closed without merging | Back to **Today** |
+
+Each change adds a line to the card's activity by GitHub. If the card's project has a repo set, only PRs in that repo can move it. Redeliveries are harmless.
+
+### 1. Pick a secret and set it in `.env`
+
+```sh
+openssl rand -hex 32
+```
+
+Put it in `.env` as `GITHUB_WEBHOOK_SECRET=…` and restart the server. Until it's set, the webhook answers 503.
+
+### 2. Give GitHub a way to reach your Mac
+
+GitHub needs a public address, and the board is running on your Mac. For now use [smee.io](https://smee.io), which relays webhooks to localhost:
+
+1. Open https://smee.io and press **Start a new channel**. Keep the URL it gives you (`https://smee.io/abc123`); it's your webhook address.
+2. Run the relay alongside `pnpm dev`, and leave it running:
+   ```sh
+   npx smee-client -u https://smee.io/abc123 -t http://localhost:4000/webhooks/github
+   ```
+
+Deliveries made while the relay or the server is off are lost, but the reconcile job (step 4) catches up. When the board moves to the VPS the webhook address becomes `https://<board domain>/webhooks/github` and smee is no longer needed.
+
+### 3. Add the webhook to each repo
+
+Do this once per repository you work in (tomhartill/mvc, kinzo, prospector and so on):
+
+1. On GitHub open the repo, then **Settings → Webhooks → Add webhook**.
+2. **Payload URL**: your smee URL (later, the board's own `/webhooks/github` address).
+3. **Content type**: `application/json`. This matters: the board refuses the form-encoded kind.
+4. **Secret**: the same value as `GITHUB_WEBHOOK_SECRET`.
+5. **Which events**: choose **Let me select individual events**, untick **Pushes**, tick **Pull requests**.
+6. Leave **Active** ticked and press **Add webhook**.
+
+GitHub sends a ping straight away. Under the webhook's **Recent Deliveries** tab it should show a green tick with response 200. A 401 means the secrets don't match; a 503 means the server hasn't picked up `GITHUB_WEBHOOK_SECRET`.
+
+GitHub has no account-wide webhook for personal repos, so each repo needs its own.
+
+### 4. Optional: the 15-minute catch-up
+
+With a token, the server checks GitHub every 15 minutes (and five seconds after it starts) for anything the webhook missed: it re-reads every card with an open PR, and looks for a PR from every unfinished card that has a branch but no PR yet (that needs the card's project to have a repo).
+
+1. GitHub → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
+2. Resource owner: you. Repository access: **All repositories**, or the ones you use with the board.
+3. Permissions: **Pull requests: Read-only** (Metadata: Read-only is added automatically). Nothing else.
+4. Put it in `.env` as `GITHUB_TOKEN=…` and restart the server.
+
+`GITHUB_RECONCILE_MINUTES` changes the interval. To run a check now: `curl -X POST http://localhost:4000/api/v1/github/reconcile` (with `AUTH_MODE=dev`).
+
 ## How live sync works
 
 1. Every write is an ordinary HTTP request. In the same transaction it records an event in the `events` table and calls `pg_notify`.
@@ -91,8 +150,11 @@ All under `/api/v1`, JSON, signed in.
 | `POST /threads`, `PATCH /threads/:id`, `DELETE /threads/:id` | Threads on the Projects map. `parentId` makes a sub-thread (same project as its parent). Moving a thread to another project takes its sub-threads with it; deleting one deletes its sub-threads |
 | `PATCH /settings` | `{ palette?, projectsLayout? }`, stored on the server so they follow you |
 | `GET /me` | Who is signed in |
+| `POST /github/reconcile` | Check GitHub for missed pull request changes now (needs `GITHUB_TOKEN`) |
 | `WS /live` | Live events; see above |
+
+`POST /webhooks/github` sits outside `/api/v1` and sign-in; GitHub's signature is checked instead.
 
 ## Not built yet
 
-In the spec's build order: Days view, the Projects map, the GitHub webhook, Gmail intake, Calendar, the move to the VPS, and the dispatcher that starts coding sessions.
+In the spec's build order: Days view, the Projects map, Gmail intake, Calendar, the move to the VPS, and the dispatcher that starts coding sessions.

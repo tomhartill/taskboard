@@ -8,11 +8,13 @@ import { registerAuth } from './auth/auth';
 import type { Config } from './config';
 import { createDb } from './db/client';
 import { startRollover } from './jobs/rollover';
+import { reconcile, scheduleReconcile } from './github/reconcile';
+import { githubWebhook } from './github/webhook';
 import { LiveHub } from './live/hub';
 import { apiRoutes } from './routes/api';
 import { Invalid, NotFound, createStore } from './store';
 
-export async function buildApp(config: Config, opts: { logger?: boolean } = {}) {
+export async function buildApp(config: Config, opts: { logger?: boolean; reconcile?: boolean } = {}) {
   const app = Fastify({
     logger: opts.logger === false ? false : { level: config.LOG_LEVEL },
     trustProxy: true,
@@ -47,6 +49,14 @@ export async function buildApp(config: Config, opts: { logger?: boolean } = {}) 
 
   await app.register(apiRoutes, { prefix: '/api/v1', store });
 
+  // GitHub: pull request webhooks move cards; a reconcile job catches missed deliveries.
+  await app.register(githubWebhook, { db, secret: config.GITHUB_WEBHOOK_SECRET });
+  const github = { token: config.GITHUB_TOKEN, apiUrl: config.GITHUB_API_URL };
+  app.post('/api/v1/github/reconcile', { preHandler: app.requireUser }, async (req, reply) => {
+    if (!github.token) return reply.code(503).send({ error: 'GITHUB_TOKEN is not set' });
+    return reconcile(db, { ...github, log: req.log });
+  });
+
   const allowedOrigin = new URL(config.PUBLIC_URL).origin;
   app.get('/api/v1/live', { websocket: true }, (socket, req) => {
     // Browsers send cookies with WebSocket upgrades from any site, so check the origin.
@@ -70,11 +80,16 @@ export async function buildApp(config: Config, opts: { logger?: boolean } = {}) 
   }
 
   let rollover: ReturnType<typeof startRollover> | undefined;
+  let stopReconcile: (() => void) | null = null;
   app.addHook('onReady', async () => {
     await hub.start();
     rollover = startRollover(store, config.TIMEZONE, app.log);
+    if (github.token && opts.reconcile !== false) {
+      stopReconcile = scheduleReconcile(db, { ...github, minutes: config.GITHUB_RECONCILE_MINUTES, log: app.log });
+    }
   });
   app.addHook('onClose', async () => {
+    stopReconcile?.();
     await rollover?.stop();
     await hub.stop();
     await pool.end();

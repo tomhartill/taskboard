@@ -28,7 +28,7 @@ export async function startServer(databaseUrl: string, overrides: Partial<Record
     PUBLIC_URL: 'http://localhost:5173',
     ...overrides,
   });
-  const built = await buildApp(config, { logger: false });
+  const built = await buildApp(config, { logger: false, reconcile: false });
   await built.app.listen({ port: 0, host: '127.0.0.1' });
   const addr = built.app.server.address();
   const port = typeof addr === 'object' && addr ? addr.port : 0;
