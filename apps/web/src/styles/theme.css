@@ -1,0 +1,98 @@
+/* Palettes are sets of custom properties on <html data-palette="…">. Slate is the default. */
+:root,
+[data-palette='slate'] {
+  --bg: #e9ebef; --card: #ffffff; --triage: #dbe2f6; --line: #16191d; --hair: #c9ced6;
+  --text: #16191d; --muted: #4b5563; --accent: #1d4ed8; --on-accent: #ffffff; --link: #1d4ed8;
+  --chip: #e7e9ed; --chip-tx: #3f4753; --src: #dbeafe; --src-tx: #1e3a8a; --pers: #fde7d3; --pers-tx: #7a3a06;
+  --ok: #14532d; --warn: #7a4a00; --danger: #b91c1c;
+  --p1: #1d4ed8; --p2: #0f766e; --p3: #b45309; --p4: #9d174d; --p5: #4d7c0f;
+  color-scheme: light;
+}
+[data-palette='ink'] {
+  --bg: #0f1114; --card: #1a1d22; --triage: #151a2b; --line: #4a515c; --hair: #2f353e;
+  --text: #eef0f3; --muted: #a7afba; --accent: #8fb0ff; --on-accent: #0b1020; --link: #a9c1ff;
+  --chip: #2a2f37; --chip-tx: #d5d9df; --src: #1e2e52; --src-tx: #cbd9ff; --pers: #4a2a10; --pers-tx: #ffd3ad;
+  --ok: #7ee2a4; --warn: #ffc46b; --danger: #ff9b9b;
+  --p1: #8fb0ff; --p2: #5eead4; --p3: #fbbf74; --p4: #f9a8d4; --p5: #bef264;
+  color-scheme: dark;
+}
+[data-palette='sand'] {
+  --bg: #efe8da; --card: #fffdf8; --triage: #e4d8bf; --line: #2a2118; --hair: #d3c7b1;
+  --text: #2a2118; --muted: #5e5343; --accent: #a43f0d; --on-accent: #ffffff; --link: #9a3a0b;
+  --chip: #e9e0cf; --chip-tx: #4a4032; --src: #dfe9f5; --src-tx: #1e3a5f; --pers: #f8dcc3; --pers-tx: #7a3a06;
+  --ok: #1f5a34; --warn: #7a4a00; --danger: #a61b1b;
+  --p1: #a43f0d; --p2: #1e3a5f; --p3: #5f6b1a; --p4: #8a2f4f; --p5: #2f6b5a;
+  color-scheme: light;
+}
+[data-palette='forest'] {
+  --bg: #e6ede6; --card: #ffffff; --triage: #d3e2cf; --line: #14301f; --hair: #c2d1c6;
+  --text: #14241a; --muted: #47574c; --accent: #1f6b43; --on-accent: #ffffff; --link: #1b5e3a;
+  --chip: #dfe8e1; --chip-tx: #33453a; --src: #dbe8f5; --src-tx: #1e3a5f; --pers: #fde7d3; --pers-tx: #7a3a06;
+  --ok: #1f5a34; --warn: #7a4a00; --danger: #a61b1b;
+  --p1: #1f6b43; --p2: #1e3a5f; --p3: #a15c07; --p4: #8a2f4f; --p5: #4a6b1a;
+  color-scheme: light;
+}
+
+:root {
+  --display: 'Space Grotesk', Inter, system-ui, sans-serif;
+  --body: Inter, system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, Menlo, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 var(--body);
+  -webkit-font-smoothing: antialiased;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+a { color: var(--link); }
+a:hover { color: var(--text); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Square controls; tags stay as rounded pills. */
+button, input, select, textarea { font: inherit; color: inherit; border-radius: 0; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 16px;
+  border: 1px solid var(--line); background: transparent; color: var(--text);
+  font-weight: 500; cursor: pointer;
+}
+.btn:hover { background: var(--chip); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-primary { border-color: var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.btn-primary:hover { background: var(--accent); filter: brightness(1.1); }
+.btn-danger { border-color: var(--danger); color: var(--danger); }
+
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > span, .label {
+  color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.input {
+  min-height: 44px; padding: 8px 12px; width: 100%;
+  border: 1px solid var(--line); background: var(--card); color: var(--text);
+}
+textarea.input { min-height: 110px; resize: vertical; line-height: 1.45; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; font-weight: 600; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px; border-radius: 999px; background: var(--chip); color: var(--chip-tx); white-space: nowrap;
+}
+.chip-src { background: var(--src); color: var(--src-tx); }
+.chip-pers { background: var(--pers); color: var(--pers-tx); }
+.chip-wait { background: transparent; border: 1px solid var(--warn); color: var(--warn); }
+.chip-auto { background: transparent; border: 1px solid var(--ok); color: var(--ok); }
+.chip-high { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+.swatch { display: inline-block; width: 8px; height: 8px; flex: none; }
+
+.icon { display: inline-block; flex: none; vertical-align: -0.2em; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

@@ -1,0 +1,23 @@
+.card {
+  background: var(--card); padding: 12px; display: flex; flex-direction: column; gap: 8px;
+  cursor: pointer; text-align: left; border: 0; width: 100%; color: var(--text);
+}
+.card:hover .title { text-decoration: underline; text-underline-offset: 3px; }
+.card[data-dragging='true'] { opacity: 0.4; }
+.title { margin: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.done .title { color: var(--muted); }
+.meta { margin: 0; color: var(--muted); font-size: 12px; }
+.meta strong { color: var(--text); }
+.branch { margin: 0; color: var(--muted); font-size: 12px; font-family: var(--mono); overflow-wrap: anywhere; }
+.warn { margin: 0; color: var(--warn); font-size: 12px; font-weight: 600; }
+.links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; }
+.links a { display: inline-flex; align-items: center; gap: 5px; }
+.tick { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.tick input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+.triageActions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); }
+.triageActions button {
+  min-height: 44px; border: 0; background: var(--card); color: var(--text); font-size: 12px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px;
+}
+.triageActions button + button { border-left: 1px solid var(--line); }
+.triageActions button:first-child { background: var(--accent); color: var(--on-accent); font-weight: 600; }

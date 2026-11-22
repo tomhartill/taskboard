@@ -1,0 +1,12 @@
+.dialog {
+  border: 2px solid var(--line); padding: 0; background: var(--card); color: var(--text);
+  width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 32px);
+}
+.dialog::backdrop { background: color-mix(in srgb, #000 40%, transparent); }
+.form { display: flex; flex-direction: column; gap: 16px; padding: 24px; }
+.head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.head h2 { margin: 0; font-family: var(--display); font-size: 22px; }
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.foot { display: flex; justify-content: flex-end; gap: 10px; }
+.close { width: 44px; height: 44px; border: 1px solid var(--line); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+@media (max-width: 520px) { .row { grid-template-columns: 1fr; } }

@@ -1,0 +1,48 @@
+.drawer {
+  margin: 0 0 0 auto; height: 100dvh; max-height: 100dvh; max-width: 100%; width: min(760px, 100%);
+  border: 0; border-left: 2px solid var(--line); padding: 0; background: var(--card); color: var(--text);
+}
+.drawer::backdrop { background: color-mix(in srgb, #000 35%, transparent); }
+.panel {
+  display: flex; flex-direction: column; gap: 22px;
+  padding: max(28px, env(safe-area-inset-top)) max(32px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) 32px;
+}
+.top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.close { margin-left: auto; width: 44px; height: 44px; border: 1px solid var(--line); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.titleInput {
+  font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1.2;
+  border: 1px solid transparent; background: transparent; padding: 4px 6px; margin: -4px -6px; width: calc(100% + 12px);
+  resize: none; field-sizing: content; min-height: 1.2em; overflow-wrap: anywhere;
+}
+.titleInput:hover, .titleInput:focus { border-color: var(--line); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.full { grid-column: 1 / -1; }
+.modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); }
+.modes label { display: flex; gap: 10px; padding: 12px; cursor: pointer; align-items: flex-start; }
+.modes label + label { border-left: 1px solid var(--line); }
+.modes label:has(input:checked) { background: var(--chip); }
+.modes small { color: var(--muted); display: block; font-size: 12px; }
+.modes input { margin: 3px 0 0; accent-color: var(--accent); }
+.moveTo { display: flex; flex-wrap: wrap; border: 1px solid var(--line); }
+.moveTo button { flex: 1 1 auto; min-height: 44px; padding: 0 12px; border: 0; background: transparent; cursor: pointer; font-weight: 500; }
+.moveTo button + button { border-left: 1px solid var(--line); }
+.moveTo button[aria-pressed='true'] { background: var(--text); color: var(--bg); font-weight: 600; }
+.section h2 { margin: 0 0 10px; font-family: var(--display); font-size: 16px; }
+.rule { margin: 0; padding: 12px 14px; background: var(--chip); font-size: 13px; }
+.activity { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.activity li { display: grid; grid-template-columns: 90px 1fr auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--hair); font-size: 13px; }
+.activity li span:first-child { font-weight: 600; }
+.activity time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--hair); }
+@media (max-width: 760px) {
+  .drawer { border-left: 0; }
+  .panel { padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); gap: 18px; }
+  .grid, .modes { grid-template-columns: 1fr; }
+  .modes label + label { border-left: 0; border-top: 1px solid var(--line); }
+  .moveTo button { flex: 1 1 33%; }
+  .moveTo button + button { border-left: 0; }
+  .moveTo { gap: 1px; background: var(--line); }
+  .moveTo button { background: var(--card); }
+  .activity li { grid-template-columns: 70px 1fr; }
+  .activity time { grid-column: 2; }
+}

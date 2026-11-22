@@ -1,0 +1,57 @@
+.bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  padding: 20px 28px; border-bottom: 2px solid var(--line);
+}
+.title {
+  margin: 0; font-family: var(--display); font-size: 30px; font-weight: 700;
+  letter-spacing: -0.02em; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+}
+.status { width: 10px; height: 10px; display: inline-block; }
+.status[data-status='live'] { background: var(--ok); }
+.status[data-status='connecting'] { background: var(--warn); }
+.status[data-status='offline'] { background: var(--danger); }
+
+.seg { display: flex; border: 1px solid var(--line); }
+.seg > a, .seg > button {
+  display: flex; align-items: center; min-height: 44px; padding: 0 16px;
+  border: 0; background: transparent; color: var(--text); font-weight: 500; text-decoration: none; cursor: pointer;
+}
+.seg > * + * { border-left: 1px solid var(--line) !important; }
+.seg > [aria-current='page'], .seg > [aria-pressed='true'] { background: var(--text); color: var(--bg); font-weight: 600; }
+.seg :global(.icon) { margin-right: 6px; }
+
+.menu { display: contents; }
+.menuBtn { display: none; width: 44px; height: 44px; padding: 0; align-items: center; justify-content: center; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+
+.select { display: flex; align-items: center; gap: 8px; }
+.select select { min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: var(--card); }
+
+.palettes { display: flex; align-items: center; gap: 10px; }
+.pal {
+  width: 44px; height: 44px; padding: 0; border: 1px solid; display: flex;
+  align-items: flex-end; justify-content: flex-end; cursor: pointer;
+}
+.pal span { display: block; width: 22px; height: 22px; }
+.pal[aria-pressed='true'] { outline: 2px solid var(--text); outline-offset: 2px; }
+.palLabel { display: none; }
+
+.actions { margin-left: auto; display: flex; gap: 10px; }
+
+@media (max-width: 760px) {
+  .bar { padding: 10px 14px; gap: 10px; }
+  .title { font-size: 22px; }
+  .menuBtn { display: flex; margin-left: auto; }
+  .bar > nav:first-of-type { order: 3; width: 100%; }
+  .bar > nav:first-of-type > a { flex: 1; justify-content: center; }
+  .menu { display: none; }
+  .open .menu {
+    display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+    width: 100%; order: 5; padding-top: 10px; border-top: 1px solid var(--line);
+  }
+  .open .menu .seg > button { flex: 1; justify-content: center; }
+  .open .select { justify-content: space-between; }
+  .open .select select { flex: 1; max-width: 70%; }
+  .palLabel { display: inline; }
+  .actions { margin-left: 0; width: 100%; order: 4; }
+  .actions > * { flex: 1; }
+}

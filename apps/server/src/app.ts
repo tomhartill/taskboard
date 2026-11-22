@@ -57,9 +57,12 @@ export async function buildApp(config: Config, opts: { logger?: boolean } = {}) 
   // In production the server also serves the built web app.
   const webDist = config.WEB_DIST ?? fileURLToPath(new URL('../../web/dist', import.meta.url));
   if (existsSync(`${webDist}/index.html`)) {
-    await app.register(fastifyStatic, { root: webDist, wildcard: false });
+    await app.register(fastifyStatic, { root: webDist });
     app.setNotFoundHandler((req, reply) => {
-      if (req.method === 'GET' && !req.url.startsWith('/api/')) return reply.sendFile('index.html');
+      // App routes such as /days get the SPA; missing files and API paths get a 404.
+      const path = req.url.split('?')[0]!;
+      const isAppRoute = req.method === 'GET' && !path.startsWith('/api/') && !/\.[a-z0-9]+$/i.test(path);
+      if (isAppRoute) return reply.sendFile('index.html');
       return reply.code(404).send({ error: 'Not found' });
     });
   }

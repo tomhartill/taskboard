@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm --parallel --filter ./apps/* dev",
+    "dev": "pnpm --parallel --filter @taskboard/server --filter @taskboard/web dev",
     "build": "pnpm --filter @taskboard/web build && pnpm --filter @taskboard/server build",
     "start": "pnpm --filter @taskboard/server start",
     "db:generate": "pnpm --filter @taskboard/server db:generate",
