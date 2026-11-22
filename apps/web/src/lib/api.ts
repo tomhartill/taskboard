@@ -4,13 +4,16 @@ import type {
   Card,
   CreateCard,
   CreateProject,
+  CreateThread,
   Me,
   MoveCard,
   Project,
   Settings,
+  Thread,
   UpdateCard,
   UpdateProject,
   UpdateSettings,
+  UpdateThread,
 } from '@taskboard/shared';
 
 export class ApiError extends Error {
@@ -47,5 +50,9 @@ export const api = {
   deleteCard: (id: number) => request<void>('DELETE', `/cards/${id}`),
   createProject: (input: CreateProject) => request<Project>('POST', '/projects', input),
   updateProject: (id: number, patch: UpdateProject) => request<Project>('PATCH', `/projects/${id}`, patch),
+  deleteProject: (id: number) => request<void>('DELETE', `/projects/${id}`),
+  createThread: (input: CreateThread) => request<Thread>('POST', '/threads', input),
+  updateThread: (id: number, patch: UpdateThread) => request<Thread>('PATCH', `/threads/${id}`, patch),
+  deleteThread: (id: number) => request<void>('DELETE', `/threads/${id}`),
   updateSettings: (patch: UpdateSettings) => request<Settings>('PATCH', '/settings', patch),
 };

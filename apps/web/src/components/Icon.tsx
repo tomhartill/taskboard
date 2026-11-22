@@ -16,6 +16,7 @@ const PATHS = {
   done: <><rect x="3" y="3" width="18" height="18" /><path d="m8 12 3 3 5-6" /></>,
   mail: <><rect x="2" y="4" width="20" height="16" /><path d="m22 6-10 7L2 6" /></>,
   globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+  external: <><path d="M14 3h7v7M21 3l-9 9" /><path d="M19 14v7H3V5h7" /></>,
   person: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
   work: <><rect x="2" y="7" width="20" height="14" /><path d="M8 7V3h8v4M2 13h20" /></>,
   pause: <path d="M9 5v14M15 5v14" />,

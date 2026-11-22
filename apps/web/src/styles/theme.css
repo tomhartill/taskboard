@@ -33,6 +33,12 @@
   color-scheme: light;
 }
 
+/* Thread states on the Projects map: Working, Waiting on you, Ready to review, Done. */
+:root, [data-palette='slate'] { --s-working: #1d4ed8; --s-waiting: #b45309; --s-review: #7c3aed; --s-done: #9aa3af; }
+[data-palette='ink'] { --s-working: #8fb0ff; --s-waiting: #ffc46b; --s-review: #c4a5ff; --s-done: #5b636e; }
+[data-palette='sand'] { --s-working: #a43f0d; --s-waiting: #8a5a00; --s-review: #6b3fa0; --s-done: #b3a68f; }
+[data-palette='forest'] { --s-working: #1f6b43; --s-waiting: #a15c07; --s-review: #5b3fa0; --s-done: #9fb0a4; }
+
 :root {
   --display: 'Space Grotesk', Inter, system-ui, sans-serif;
   --body: Inter, system-ui, -apple-system, sans-serif;

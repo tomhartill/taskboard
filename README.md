@@ -130,6 +130,15 @@ With a token, the server checks GitHub every 15 minutes (and five seconds after 
 
 Writers take a Postgres advisory lock, so events are numbered in commit order and no client can skip one.
 
+## Projects map
+
+`/projects` shows you, your projects, and the Claude threads and sub-threads under each. Two layouts, switched at the top and remembered on the server so every device opens the same one:
+
+- **Columns**: you, projects, threads, sub-threads from left to right. A block's height shows how much sits under it. Click a project to zoom in, click "tom" or "All projects" to zoom out.
+- **Cards and tree**: a tile per project with a status bar, and the chosen project's threads as an indented tree. Best on a phone.
+
+Threads are entered by hand for now (Add thread, or Sub-thread on a selected one). Select a thread to see its state and last activity, open its link, or edit it. Edit project changes the name, colour, repo, Claude project link and whether new cards auto-start. The open project and selected thread sit in the URL (`?project=ID&thread=ID`), so Back works and links can be bookmarked.
+
 ## Scripts
 
 | Command | What it does |
@@ -203,4 +212,4 @@ All under `/api/v1`, JSON, signed in.
 
 ## Not built yet
 
-In the spec's build order: the Projects map, Gmail intake, Calendar, the move to the VPS, and the dispatcher that starts coding sessions.
+In the spec's build order: Gmail intake, Calendar, the move to the VPS, and the dispatcher that starts coding sessions.

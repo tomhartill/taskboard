@@ -4,7 +4,7 @@ import { Navigate, Route, Routes } from 'react-router';
 import { BoardView } from './components/BoardView';
 import { CardDrawer } from './components/CardDrawer';
 import { DaysView } from './components/DaysView';
-import { Placeholder } from './components/Placeholder';
+import { ProjectsView } from './components/projects/ProjectsView';
 import { SignIn } from './components/SignIn';
 import { TopBar } from './components/TopBar';
 import { ApiError, api } from './lib/api';
@@ -39,10 +39,7 @@ function SignedIn() {
       <Routes>
         <Route path="/" element={<BoardView board={board.data} />} />
         <Route path="/days" element={<DaysView board={board.data} />} />
-        <Route
-          path="/projects"
-          element={<Placeholder title="Projects" text="The Projects map, with Columns and Cards and tree, comes next." />}
-        />
+        <Route path="/projects" element={<ProjectsView board={board.data} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <CardDrawer board={board.data} />
