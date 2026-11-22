@@ -26,7 +26,8 @@ export function TopBar({ board, status }: { board: BoardSnapshot; status: LiveSt
   const filters = useFilters();
   const settings = useUpdateSettings();
   const { pathname, search } = useLocation();
-  const onBoard = pathname === '/';
+  // The Work/Personal and project filters apply to the Board and Days views.
+  const filtered = pathname === '/' || pathname === '/days';
   // Keep filters when switching views.
   const params = new URLSearchParams(search);
   params.delete('card');
@@ -61,7 +62,7 @@ export function TopBar({ board, status }: { board: BoardSnapshot; status: LiveSt
       </button>
 
       <div className={s.menu}>
-        {onBoard && (
+        {filtered && (
           <>
             <nav aria-label="Filter" className={s.seg}>
               {([null, 'work', 'personal'] as const).map((k) => (

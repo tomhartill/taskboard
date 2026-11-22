@@ -54,6 +54,14 @@ With `AUTH_MODE=dev` anyone who can reach those ports can use the board. That is
 
 Only `ALLOWED_EMAIL` can sign in. Each browser gets its own session, stored in the `sessions` table, which lasts 90 days.
 
+## Days
+
+`/days` shows a week: Unscheduled at the side, Monday to Friday, then Saturday and Sunday stacked in one column. A card sits on its planned day; drag it to another day (or back to Unscheduled) to re-plan it, or set Planned day in the open card, which is the way to do it on a phone. On a phone today's list comes first and the lists swipe sideways. The week is in the address (`?week=2026-11-16`), so Back and bookmarks work.
+
+Unfinished cards (anything not in Triage or Done) planned for a day that has passed move onto today and say "Carried over from Tuesday". The server does this when it starts and whenever midnight passes in `TIMEZONE` (default `Europe/London`), and logs it on the card. Giving a card a day by hand clears the mark.
+
+Each day has an empty slot above its cards where calendar events will go.
+
 ## GitHub pull requests move cards
 
 When a pull request comes from a branch that names a card, such as `T-12-export-enquiries-to-csv` or `claude/T-12`, GitHub tells the board and the card moves by itself:
@@ -195,4 +203,4 @@ All under `/api/v1`, JSON, signed in.
 
 ## Not built yet
 
-In the spec's build order: Days view, the Projects map, Gmail intake, Calendar, the move to the VPS, and the dispatcher that starts coding sessions.
+In the spec's build order: the Projects map, Gmail intake, Calendar, the move to the VPS, and the dispatcher that starts coding sessions.

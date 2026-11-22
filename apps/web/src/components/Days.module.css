@@ -1,0 +1,65 @@
+.toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  padding: 12px 28px; border-bottom: 1px solid var(--line);
+}
+.week { display: flex; align-items: center; border: 1px solid var(--line); }
+.week button {
+  width: 44px; height: 44px; border: 0; background: transparent; color: var(--text); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.week button:hover { background: var(--chip); }
+.week span {
+  min-height: 44px; padding: 0 14px; display: flex; align-items: center; font-weight: 600;
+  border-left: 1px solid var(--line); border-right: 1px solid var(--line); white-space: nowrap;
+}
+.note { margin: 0; color: var(--muted); font-size: 13px; }
+
+.scroller { overflow-x: auto; border-bottom: 1px solid var(--line); scroll-snap-type: x proximity; }
+.lists {
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 1320px; align-items: stretch; min-height: calc(100dvh - 160px);
+}
+.list { display: flex; flex-direction: column; min-width: 0; scroll-snap-align: start; }
+.list + .list { border-left: 1px solid var(--line); }
+.unscheduled { background: var(--triage); }
+
+.day { display: flex; flex-direction: column; flex: 1; padding-bottom: 16px; }
+.day[data-over='true'] { background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+.unscheduled .day[data-over='true'] { background: color-mix(in srgb, var(--accent) 10%, var(--triage)); }
+.stacked { flex: 1 1 50%; }
+.stacked + .stacked > .head { border-top: 1px solid var(--line); }
+
+.head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  padding: 12px 14px; border-bottom: 1px solid var(--line);
+}
+.head h2 {
+  margin: 0; font-family: var(--display); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.head[data-past='true'] h2 { color: var(--muted); }
+.head[data-today='true'] { background: var(--text); color: var(--bg); }
+.count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.head[data-today='true'] .count { color: var(--bg); }
+
+.body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 0; flex: 1; }
+.events:empty { display: none; }
+.hint, .empty { margin: 0; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .lists { display: flex; min-width: 0; }
+  .list { flex: 0 0 300px; }
+}
+
+/* Phone: today first, then the days to come; swipe sideways between them. */
+@media (max-width: 760px) {
+  .toolbar { padding: 10px 14px; }
+  .week { flex: 1; }
+  .week span { flex: 1; justify-content: center; }
+  .note { display: none; }
+  .scroller { scroll-snap-type: x mandatory; }
+  .list { flex: 0 0 86%; order: var(--phone-order, 0); }
+  .list + .list { border-left: 0; }
+  .list { border-right: 1px solid var(--line); }
+  .lists { min-height: calc(100dvh - 220px); }
+}

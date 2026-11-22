@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { BoardView } from './components/BoardView';
 import { CardDrawer } from './components/CardDrawer';
+import { DaysView } from './components/DaysView';
 import { Placeholder } from './components/Placeholder';
 import { SignIn } from './components/SignIn';
 import { TopBar } from './components/TopBar';
@@ -37,10 +38,7 @@ function SignedIn() {
       <TopBar board={board.data} status={status} />
       <Routes>
         <Route path="/" element={<BoardView board={board.data} />} />
-        <Route
-          path="/days"
-          element={<Placeholder title="Days" text="The week view, with each card's planned day and your calendar, comes next." />}
-        />
+        <Route path="/days" element={<DaysView board={board.data} />} />
         <Route
           path="/projects"
           element={<Placeholder title="Projects" text="The Projects map, with Columns and Cards and tree, comes next." />}

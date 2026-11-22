@@ -26,6 +26,8 @@ const PATHS = {
   folder: <path d="M2 4h7l2 3h11v13H2z" />,
   branch: <><circle cx="6" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><circle cx="18" cy="8" r="3" /><path d="M6 9v6M18 11a6 6 0 0 1-6 6H9" /></>,
   trash: <path d="M3 6h18M8 6V3h8v3M6 6l1 15h10l1-15" />,
+  prev: <path d="m15 18-6-6 6-6" />,
+  next: <path d="m9 18 6-6-6-6" />,
 } as const;
 
 export type IconName = keyof typeof PATHS;

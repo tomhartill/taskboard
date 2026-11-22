@@ -1,5 +1,6 @@
-import type { Card, Project } from '@taskboard/shared';
+import { COLUMN_LABELS, type Card, type Column, type Project } from '@taskboard/shared';
 import { useDeleteCard, useMoveCard } from '../lib/board';
+import { carriedText, todayHere } from '../lib/days';
 import { useOpenCard } from '../lib/filters';
 import { Icon } from './Icon';
 import s from './CardTile.module.css';
@@ -10,11 +11,22 @@ interface Props {
   dragging: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
+  /** Show which board list the card is in (the Days view). */
+  showStatus?: boolean;
+  today?: string;
 }
+
+/** Status chips for the Days view; Today's cards show their mode chip instead. */
+const STATUS_CHIP: Partial<Record<Column, string>> = {
+  in_progress: 'chip chip-src',
+  review: 'chip chip-src',
+  blocked: 'chip chip-wait',
+  done: 'chip chip-auto',
+};
 
 const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
-export function CardTile({ card, project, dragging, onDragStart, onDragEnd }: Props) {
+export function CardTile({ card, project, dragging, onDragStart, onDragEnd, showStatus = false, today }: Props) {
   const { open } = useOpenCard();
   const move = useMoveCard();
   const remove = useDeleteCard();
@@ -64,6 +76,9 @@ export function CardTile({ card, project, dragging, onDragStart, onDragEnd }: Pr
             {card.mode === 'auto' ? 'Auto-start' : 'Wait for me'}
           </span>
         )}
+        {showStatus && STATUS_CHIP[card.column] && (
+          <span className={STATUS_CHIP[card.column]}>{COLUMN_LABELS[card.column]}</span>
+        )}
         {card.priority === 'high' && !isDone && <span className="chip chip-high">High</span>}
       </div>
 
@@ -108,6 +123,8 @@ export function CardTile({ card, project, dragging, onDragStart, onDragEnd }: Pr
           </div>
         </>
       )}
+
+      {card.carriedFrom && !isDone && <p className={s.warn}>{carriedText(card.carriedFrom, today ?? todayHere())}</p>}
 
       {card.column === 'in_progress' && card.branch && <p className={s.branch}>{card.branch}</p>}
       {card.column === 'blocked' && card.blockedReason && <p className={s.warn}>{card.blockedReason}</p>}
