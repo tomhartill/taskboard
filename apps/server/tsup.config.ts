@@ -1,0 +1,13 @@
+import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  entry: ['src/main.ts'],
+  format: 'esm',
+  target: 'node22',
+  platform: 'node',
+  outDir: 'dist',
+  clean: true,
+  sourcemap: true,
+  // Bundle the shared package (it ships as TypeScript source); keep real deps external.
+  noExternal: ['@taskboard/shared'],
+});
